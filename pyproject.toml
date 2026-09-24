@@ -16,6 +16,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+# Only needed with OPENAI_API_KEY set; without it a deterministic stub judges.
+openai = ["openai>=1.60"]
 dev = [
     "pytest>=8",
     "ruff>=0.6",
