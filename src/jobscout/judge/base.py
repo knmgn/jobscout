@@ -70,15 +70,27 @@ def verdict_from(payload: object) -> Verdict | None:
     )
 
 
-def one_sentence_per_line(text: str) -> str:
-    """Lay a short draft out one sentence per line.
+_NUMBERED = re.compile(r"^\(?\d+[.)]\s")
+# "[TODO: ...]" with nothing named is a placeholder the model left by itself;
+# it tells the reader nothing, so it is dropped.
+_EMPTY_TODO = re.compile(r"^\[TODO:?\s*(?:\.\.\.|…)?\s*\]$", re.IGNORECASE)
 
-    Asked for three lines, models often return three sentences run together,
-    which is harder to read in Slack and to paste into a reply box. Drafts
-    that already have line breaks (numbered answers, say) are left alone.
+
+def one_sentence_per_line(text: str) -> str:
+    """Lay a draft out one sentence per line, keeping numbered answers whole.
+
+    Asked for one sentence per line, models often run the sentences together,
+    which is harder to read in Slack and to paste into a reply box. A numbered
+    answer stays on its line even when it has several sentences, because the
+    number is what ties it to the client's question.
     """
-    lines = [line.strip() for line in text.strip().splitlines() if line.strip()]
-    if len(lines) >= 2:
-        return "\n".join(lines)
-    sentences = [s for s in re.split(r"(?<=[.!?])\s+", " ".join(lines)) if s]
-    return "\n".join(sentences)
+    out: list[str] = []
+    for line in text.strip().splitlines():
+        line = line.strip()
+        if not line or _EMPTY_TODO.match(line):
+            continue
+        if _NUMBERED.match(line):
+            out.append(line)
+        else:
+            out.extend(s for s in re.split(r"(?<=[.!?])\s+", line) if s)
+    return "\n".join(out)

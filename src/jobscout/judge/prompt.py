@@ -56,11 +56,22 @@ would approach it. Line 3: what you need from the client to start.\
 # splits the difference and answers three of ten questions.
 FORMAT_FOLLOW_CLIENT = """\
 Formatting rule for proposal: the client has said what a reply must contain \
-(quoted at the end of this message). Follow it literally and completely: if \
-it asks for an opening word, start with that word; if it asks questions, \
-answer every one, numbered as the client numbered them, each on its own line. \
-There is no length limit. No greeting and no sign-off. This affects the \
-proposal only; decide suitable exactly as you would otherwise.\
+(quoted at the end of this message). Follow it literally: if it asks for an \
+opening word, start with that word; if it asks questions, answer every one \
+on its own line, starting each answer with the client's own number ("1.", \
+"2.") so each answer can be matched to its question. Answer only what \
+it actually asks. If it asks for nothing beyond an opening word, write that \
+word on the first line and then three sentences, one per line: what you would \
+build, how you would approach it, what you need from the client to start. \
+No greeting and no sign-off.
+
+You know nothing about the applicant. Any question about their experience, \
+past work, tools used, rate, availability or timeline must be answered with \
+"[TODO: ...]" naming what they have to fill in, never with a claim such as \
+"Yes, I have experience with..." or "I can finish within a week". Only the \
+work described in the listing, and how it could be done, may be written as \
+prose. This affects the proposal only; decide suitable exactly as you would \
+otherwise.\
 """
 
 _APPLY_MARKERS = re.compile(

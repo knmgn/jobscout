@@ -9,7 +9,13 @@ import pytest
 from jobscout.judge import make_judge
 from jobscout.judge.base import verdict_from
 from jobscout.judge.openai_judge import DEFAULT_MODEL, OpenAIJudge
-from jobscout.judge.prompt import SYSTEM_PROMPT, application_instructions, user_prompt
+from jobscout.judge.prompt import (
+    FORMAT_FOLLOW_CLIENT,
+    FORMAT_THREE_LINES,
+    SYSTEM_PROMPT,
+    application_instructions,
+    user_prompt,
+)
 from jobscout.judge.stub import StubJudge
 from tests.helpers import make_job, make_track
 
@@ -35,10 +41,21 @@ def test_off_schema_replies_are_no_verdict_not_false(payload: Any) -> None:
     assert verdict_from(payload) is None
 
 
-def test_existing_line_breaks_in_a_draft_are_kept() -> None:
-    verdict = verdict_from({**GOOD, "proposal": "1. Yes. Really.\n2. No."})
+@pytest.mark.parametrize(
+    ("draft", "laid_out"),
+    [
+        # Numbered answers stay whole: the number ties them to the question.
+        ("1. Yes. Really.\n2. No.", "1. Yes. Really.\n2. No."),
+        # An opening word on its own line does not stop the rest being split.
+        ("teapot\nI would build it. Then test it.", "teapot\nI would build it.\nThen test it."),
+        # A TODO that names nothing is noise; one that names something stays.
+        ("A.\n[TODO: ...]\n[TODO: your rate]", "A.\n[TODO: your rate]"),
+    ],
+)
+def test_draft_layout(draft: str, laid_out: str) -> None:
+    verdict = verdict_from({**GOOD, "proposal": draft})
     assert verdict is not None
-    assert verdict.proposal == "1. Yes. Really.\n2. No."
+    assert verdict.proposal == laid_out
 
 
 def test_prompt_puts_the_rubric_after_the_generic_rules() -> None:
@@ -51,7 +68,9 @@ def test_prompt_puts_the_rubric_after_the_generic_rules() -> None:
 def test_client_instructions_switch_the_format_and_come_last() -> None:
     description = "Build a sheet.\n\nPlease answer the following:\n1. Tools?\n2. Timeline?"
     prompt = user_prompt(make_job(description=description), make_track())
-    assert "three sentences" not in prompt
+    # The rules are alternatives: given both, a model splits the difference.
+    assert FORMAT_THREE_LINES not in prompt
+    assert FORMAT_FOLLOW_CLIENT in prompt
     assert prompt.rstrip().endswith("2. Timeline?")
 
 
