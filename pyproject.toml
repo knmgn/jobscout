@@ -6,6 +6,7 @@ build-backend = "hatchling.build"
 name = "jobscout"
 version = "0.1.0"
 description = "A scheduled job-listing scout: browser, keyword filter, LLM judge, Slack."
+readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE"]
