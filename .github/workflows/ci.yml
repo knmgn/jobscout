@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The sanitization check reads the whole history, not just the tip.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install -e ".[dev]"
+          python -m playwright install --with-deps chromium
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      # The denylist is never committed; it comes from a repository secret
+      # (one string per line). Forks do not receive secrets, so there the
+      # step says it was skipped instead of failing every outside PR.
+      - name: Sanitization check
+        env:
+          SANITIZE_DENYLIST: ${{ secrets.SANITIZE_DENYLIST }}
+        run: |
+          if [ -z "$SANITIZE_DENYLIST" ]; then
+            echo "::warning::SANITIZE_DENYLIST secret not available; sanitization check skipped."
+            exit 0
+          fi
+          printf '%s\n' "$SANITIZE_DENYLIST" > "$RUNNER_TEMP/denylist.txt"
+          SANITIZE_DENYLIST_FILE="$RUNNER_TEMP/denylist.txt" scripts/check_sanitized.sh
+
+      - name: Unit tests
+        run: pytest -m "not browser"
+
+      - name: Browser tests (Playwright against the demo board)
+        run: pytest -m browser
+
