@@ -23,6 +23,8 @@ from jobscout.tracks import Config, ConfigError, Track, load
 
 logger = logging.getLogger("jobscout")
 
+DEMO_PORT = 8765
+
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -134,7 +136,14 @@ def demo_board(mode: str | None) -> Iterator[str | None]:
         return
     from jobscout.demo_board import BoardServer, DemoBoard
 
-    with BoardServer(DemoBoard(expired=mode == "expired")) as server:
+    board = DemoBoard(expired=mode == "expired")
+    # The same port as `make board` when it is free, so links in cards posted
+    # by the demo open again later; any free port when it is not.
+    try:
+        server = BoardServer(board, port=DEMO_PORT)
+    except OSError:
+        server = BoardServer(board)
+    with server:
         logger.info("Demo board running at %s", server.url)
         yield server.url
 
