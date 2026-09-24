@@ -8,7 +8,7 @@ import pytest
 
 from jobscout.judge import make_judge
 from jobscout.judge.base import verdict_from
-from jobscout.judge.openai_judge import OpenAIJudge
+from jobscout.judge.openai_judge import DEFAULT_MODEL, OpenAIJudge
 from jobscout.judge.prompt import SYSTEM_PROMPT, application_instructions, user_prompt
 from jobscout.judge.stub import StubJudge
 from tests.helpers import make_job, make_track
@@ -117,3 +117,9 @@ def test_openai_judge_asks_for_the_schema_and_parses_the_reply() -> None:
 def test_openai_failures_are_retries_not_rejections(reply: str | Exception) -> None:
     judge, _ = _judge(reply)
     assert judge.judge(make_job(), make_track()) is None
+
+
+def test_a_blank_model_setting_falls_back_to_the_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("OPENAI_MODEL", "")
+    client = SimpleNamespace(chat=SimpleNamespace(completions=FakeCompletions("{}")))
+    assert OpenAIJudge(client=client).model == DEFAULT_MODEL

@@ -26,7 +26,9 @@ class OpenAIJudge:
 
             client = OpenAI()  # reads OPENAI_API_KEY
         self._client = client
-        self.model = model or os.getenv("OPENAI_MODEL", DEFAULT_MODEL)
+        # `or`, not a getenv default: .env.example leaves OPENAI_MODEL= blank, and
+        # a blank value is set, so a default argument would send an empty model.
+        self.model = model or os.getenv("OPENAI_MODEL", "").strip() or DEFAULT_MODEL
 
     def judge(self, job: Job, track: Track) -> Verdict | None:
         try:
