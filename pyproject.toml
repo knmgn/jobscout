@@ -23,6 +23,9 @@ dev = [
     "ruff>=0.6",
 ]
 
+[project.scripts]
+jobscout = "jobscout.cli:main"
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/jobscout"]
 

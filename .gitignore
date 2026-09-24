@@ -14,7 +14,6 @@ logs/
 snapshots/
 out/
 .browser-profile/
-playwright-profile/
 
 # Python
 __pycache__/
