@@ -26,6 +26,7 @@ packages = ["src/jobscout"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-ra --strict-markers"
 markers = [
     "browser: drives a real Chromium through Playwright (slower; needs `playwright install chromium`)",
@@ -38,3 +39,6 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["jobscout", "tests"]

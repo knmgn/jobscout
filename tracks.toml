@@ -1,0 +1,79 @@
+# What the scout looks for, and how it judges what it finds.
+#
+# Two tracks, because someone building a freelance practice is playing two
+# games at once:
+#
+#   quick — small, exactly scoped jobs with few competitors, to finish fast
+#           and earn a first track record. Newest first: being early matters.
+#   fit   — larger work in the genre worth building a reputation on. Scope may
+#           be big; recency matters less than fit.
+#
+# They differ only in the values below (feeds, query, rubric, limits); the
+# pipeline does not know which one it is running. The `guidance` text is the
+# part tuned most often, which is why it lives here and not in code.
+
+[source]
+# Any class implementing jobscout.sources.base.Source, as "module:Class".
+# Its options table is passed to the constructor.
+class = "jobscout.sources.demo:DemoSource"
+# Where a real source would keep its browser profile (cookies) between runs.
+# profile_dir = ".browser-profile"
+
+[source.options]
+base_url = "http://127.0.0.1:8765"   # `make board`; --demo starts its own
+
+[[track]]
+name = "quick"
+label = "Quick win"
+emoji = "⚡"
+feeds = ["newest"]
+# Quoted phrases and bare words joined by OR, matched as whole words against
+# the title, description and skills. Applied here, because the feed has none.
+query = '"google sheets" OR "apps script" OR "python script" OR excel OR zapier OR csv'
+max_jobs = 40     # listings loaded per feed before the query narrows them
+limit = 8         # listings judged per run: the LLM cost ceiling
+guidance = """
+This track looks for small jobs that can be finished and handed over in one
+sitting, to build a track record. Earning is secondary to finishing well.
+
+- Competition first. A listing that already has many applicants is unlikely
+  to be won; few applicants is a strong positive, and so is being recent.
+- A bad early review costs more than no review. Answer false for clients who
+  are not verified, and for clients rated below 4.5 where a rating exists.
+- The deliverable must be clear. Answer false when the listing does not say
+  what "done" looks like: ambiguity turns a small job into rework.
+- A low price is acceptable. Do not answer false on price alone.
+- Answer false for ongoing or long-term work, and for anything that needs
+  meetings, fixed working hours or more than a day or two.
+- A client with no hiring history is fine here if they are verified; they
+  also attract fewer applicants.
+"""
+
+[[track]]
+name = "fit"
+label = "Strategic fit"
+emoji = "🎯"
+feeds = ["for-you", "newest"]
+query = '"ai agent" OR RAG OR LLM OR "workflow automation" OR n8n OR "business process automation" OR "apps script"'
+max_jobs = 30
+limit = 6
+guidance = """
+This track looks for work worth building a reputation on. Large scope is
+allowed; a multi-week build is not a reason to answer false.
+
+- In genre: workflow automation, AI agents and retrieval (RAG) systems, LLM
+  API integration, data pipelines, and internal tools in Python. Turning a
+  spreadsheet-driven manual process into something that runs by itself is in
+  genre too, however plain the stack.
+- Out of genre: design, video, writing, translation, data entry, and web or
+  app work with no automation in it.
+- A client with no hiring history or no rating yet is not a reason to answer
+  false: judge those listings on the described work. Mention a missing
+  verification in the reason rather than rejecting on it.
+- A client rating well below 4.5, from a client with enough history to have
+  earned it, counts against.
+- Work the client describes as something they will keep extending counts in
+  favour: repeat business is worth more than a one-off at the same price.
+- Do not answer false because the job looks long or hard. That is what this
+  track is for.
+"""
