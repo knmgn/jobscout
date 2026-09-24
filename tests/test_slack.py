@@ -107,14 +107,17 @@ def test_harvest_reads_ratings_and_thread_notes() -> None:
                     "ok": True,
                     "messages": [
                         {"ts": "1.0", "text": "card"},
-                        {"ts": "1.1", "text": "Too vague."},
+                        {"ts": "1.1", "text": "Too vague, &lt;5 details &amp; no deadline."},
                     ],
                 }
             ],
         }
     )
     found = BotNotifier("t", "C1", transport=slack).harvest(now=1_000_000.0)
-    assert found == {"1.0": Feedback("bad", "Too vague."), "2.0": Feedback("good", "")}
+    assert found == {
+        "1.0": Feedback("bad", "Too vague, <5 details & no deadline."),
+        "2.0": Feedback("good", ""),
+    }
     # The unrated message's thread is never read.
     assert sum(1 for url, *_ in slack.calls if url.endswith("replies")) == 1
 

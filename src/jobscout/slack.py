@@ -288,11 +288,16 @@ class BotNotifier:
             logger.warning("Could not read the thread on %s: %s", thread_ts, exc)
             return ""
         replies = [
-            (m.get("text") or "").strip()
+            unescape(m.get("text") or "").strip()
             for m in payload.get("messages", [])
             if str(m.get("ts", "")) != thread_ts  # the first one is the card itself
         ]
         return "\n".join(r for r in replies if r)
+
+
+def unescape(text: str) -> str:
+    """Undo Slack's escaping of message text, so a note reads as it was typed."""
+    return text.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&")
 
 
 def rating_from(reaction_names: list[str]) -> str | None:
