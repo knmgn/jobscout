@@ -1,0 +1,31 @@
+# Local-only instructions (holds the sanitization denylist)
+CLAUDE.local.md
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Runtime state
+*.db
+*.db-journal
+*.log
+logs/
+snapshots/
+out/
+.browser-profile/
+playwright-profile/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
