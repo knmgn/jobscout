@@ -16,6 +16,8 @@ from pathlib import Path
 from types import TracebackType
 from typing import TYPE_CHECKING, Self
 
+from playwright.sync_api import Error as PlaywrightError
+
 from jobscout.sources.base import (
     NothingParsed,
     PageState,
@@ -134,6 +136,13 @@ class BrowserSession:
             if self.always_snapshot:
                 save_snapshot(page, self.snapshot_dir, f"{self.source.name}-{feed}")
             return jobs
+        except PlaywrightError as exc:
+            # A timeout or a dropped connection is this feed's failure, to be
+            # reported like any other, not a crash that takes the run down.
+            path = _try_snapshot(page, self.snapshot_dir, f"{self.source.name}-{feed}-error")
+            raise UnexpectedPage(
+                f"{self.source.name}/{feed}: browser error: {exc}", snapshot=path
+            ) from exc
         finally:
             page.close()
 
@@ -196,6 +205,14 @@ def save_snapshot(page: Page, directory: Path, tag: str) -> Path:
         logger.debug("Screenshot for %s failed: %s", html_path.name, exc)
     logger.info("Saved snapshot %s", html_path)
     return html_path
+
+
+def _try_snapshot(page: Page, directory: Path, tag: str) -> str | None:
+    try:
+        return str(save_snapshot(page, directory, tag))
+    except Exception as exc:
+        logger.debug("Could not snapshot after a browser error: %s", exc)
+        return None
 
 
 def press_load_more(page: Page, listing_selector: str, button: Locator, want: int) -> int:
